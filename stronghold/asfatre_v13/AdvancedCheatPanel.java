@@ -55,6 +55,37 @@ public final class AdvancedCheatPanel {
         new AdvancedCheatPanel(activity,sender).open();
     }
 
+    /**
+     * Designed for the original CheatMenu click callback. This avoids adding a
+     * method reference to private GameActivity.queueCheat in the external DEX.
+     * Reflection here targets the app's OWN private method, not a system API.
+     */
+    public static void openForView(View clicked) {
+        Context ctx=clicked.getContext();
+        while(ctx instanceof android.content.ContextWrapper && !(ctx instanceof Activity)) {
+            Context parent=((android.content.ContextWrapper)ctx).getBaseContext();
+            if(parent==null || parent==ctx)break;
+            ctx=parent;
+        }
+        if(!(ctx instanceof Activity))return;
+        final Activity a=(Activity)ctx;
+        show(a,key->{
+            try {
+                java.lang.reflect.Method target=null;
+                for(Class<?> cls=a.getClass();cls!=null;cls=cls.getSuperclass()) {
+                    try {target=cls.getDeclaredMethod("queueCheat",char.class);break;}
+                    catch(NoSuchMethodException missing) { /* search the base Activity */ }
+                }
+                if(target==null)throw new NoSuchMethodException("GameActivity.queueCheat(char)");
+                target.setAccessible(true);
+                target.invoke(a,key);
+            } catch(ReflectiveOperationException | SecurityException failure) {
+                android.util.Log.e("AsfatreModMenu","Original cheat command could not be sent",failure);
+                Toast.makeText(a,"Perintah cheat gagal: lihat log",Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
     private int dp(int v){return (int)(v*activity.getResources().getDisplayMetrics().density+0.5f);}
     private TextView text(String s,int size,int color){
         TextView t=new TextView(activity);t.setText(s);t.setTextSize(size);
