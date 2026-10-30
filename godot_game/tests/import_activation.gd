@@ -33,7 +33,7 @@ func _ready() -> void:
 	check(ImportActivation.staged_ready(stage), "completed staged layout detected")
 	check(ImportActivation.promote(stage, live).is_empty(), "complete stage promoted")
 	check(FileAccess.file_exists(live.path_join("manifest.json")), "candidate becomes live")
-	check(FileAccess.file_exists(live.path_join(".previous/original.txt")), "backup preserved pending validation")
+	check(FileAccess.file_exists(live + ".previous/original.txt"), "backup preserved pending validation")
 	check(ImportActivation.rollback(live), "runtime failure rolls back")
 	check(FileAccess.file_exists(live.path_join("original.txt")), "original restored after failure")
 	check(not FileAccess.file_exists(live.path_join("manifest.json")), "failed candidate removed")
@@ -48,6 +48,13 @@ func _ready() -> void:
 	check(ImportActivation.recover_missing(live), "interrupted promotion recovers backup")
 	check(FileAccess.file_exists(live.path_join("manifest.json")), "recovered import is intact")
 	check(not ImportActivation.recover_missing(live), "recovery never overwrites live data")
+	if not GameData.ready():
+		Assets.man = {"buildings": {"stale": true}}
+		Assets.terr = {"stale": true}
+		Assets.terrain_source = {"stale": 9}
+		Assets.load_all()
+		check(Assets.man.is_empty() and Assets.terr.is_empty() and Assets.terrain_source.is_empty(),
+			"asset reload clears stale metadata when no valid game data exists")
 	Importer._rmdir(root)
 	print("IMPORT_ACTIVATION_TEST checks=%d failures=%d" % [checks, failures])
 	get_tree().quit(0 if failures == 0 else 1)
