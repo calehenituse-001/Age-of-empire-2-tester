@@ -23,6 +23,12 @@ func _ready() -> void:
 
 ## Reads the tables of the extracted game; does nothing while there is no game data yet (portable version before its import).
 func load_all() -> void:
+	# Do not retain a manifest or terrain references from a failed/old import.
+	# Boot can reload Assets after an unsuccessful data activation.
+	man.clear()
+	terr.clear()
+	terrain_source.clear()
+	terrain_set = null
 	_tex.clear()
 	_weak_tex.clear()
 	_tex_order.clear()
