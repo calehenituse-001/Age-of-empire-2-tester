@@ -20,6 +20,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          cmdline-tools-version: 13114758
       - name: Install only the compile-time Android API
         run: sdkmanager 'platforms;android-35'
       - name: Check Stronghold UI source and JVM settings
