@@ -1,6 +1,11 @@
 name: Stronghold menu source check (no APK)
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'stronghold/android/**'
+      - '.github/workflows/stronghold-menu-source.yml'
   pull_request:
     paths:
       - 'stronghold/**'
@@ -23,8 +28,8 @@ jobs:
         with:
           packages: platform-tools
           cmdline-tools-version: 13114758
-      - name: Install only the compile-time Android API
-        run: sdkmanager 'platforms;android-35'
+      - name: Install Android SDK for Java and DEX
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Check Stronghold UI source and JVM settings
         shell: bash
         run: |
@@ -38,7 +43,18 @@ jobs:
             -d build/source-check tests/SettingsTest.java
           java -cp "build/source-check:$ANDROID_HOME/platforms/android-35/android.jar" SettingsTest
           python3 -m py_compile tools/*.py tests/*.py
-          echo 'Source check passed. No patched APK or Android runtime test performed.'
+          find build/source-check/org -name '*.class' > build/classes-to-dex.txt
+          mkdir -p build/menu-dex
+          mapfile -t classes < build/classes-to-dex.txt
+          "$ANDROID_HOME/build-tools/35.0.0/d8" --min-api 28 --lib "$ANDROID_HOME/platforms/android-35/android.jar" --output build/menu-dex "${classes[@]}"
+          test -s build/menu-dex/classes.dex
+          echo 'Source and DEX check passed. No copyrighted APK was built or uploaded.'
+      - name: Upload menu DEX (source-only, no game assets)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stronghold-Menu-Dex
+          path: stronghold/build/menu-dex/classes.dex
+          if-no-files-found: error
 
 # Runs only for Stronghold-related pull requests or on manual dispatch. The original proprietary APK is NOT in this repo.
 # To package a signed Stronghold APK, follow stronghold/docs/BUILD.md with
