@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
 import android.util.Log;
+import android.widget.Toast;
 import android.view.View;
 import java.util.WeakHashMap;
 import org.stronghold.port.StrongholdModOverlay;
@@ -29,6 +30,7 @@ public final class ModInitProvider extends ContentProvider implements Applicatio
     private final Handler main = new Handler(Looper.getMainLooper());
     private final WeakHashMap<Activity,StrongholdModOverlay> overlays = new WeakHashMap<>();
     private final WeakHashMap<Activity,Boolean> resumed = new WeakHashMap<>();
+    private final WeakHashMap<Activity,Boolean> greeted = new WeakHashMap<>();
 
     @Override public boolean onCreate() {
         Context context = getContext();
@@ -45,6 +47,12 @@ public final class ModInitProvider extends ContentProvider implements Applicatio
         if (!EXTREME.equals(activity.getClass().getName())) return;
         resumed.put(activity, Boolean.TRUE);
         Log.i(TAG, "Extreme resumed; scheduling overlay installation");
+        // Visible, time-limited proof that the new secondary DEX and the
+        // ContentProvider lifecycle actually ran, even if the bubble fails.
+        if (!Boolean.TRUE.equals(greeted.get(activity))) {
+            greeted.put(activity, Boolean.TRUE);
+            Toast.makeText(activity, "STRONGHOLD MOD v3.3.2 loader aktif", Toast.LENGTH_LONG).show();
+        }
         View decor = activity.getWindow().getDecorView();
         // View.post runs after attachment. main.post is a fallback if the decor
         // is already attached and the game's first layout has not completed.
@@ -75,6 +83,7 @@ public final class ModInitProvider extends ContentProvider implements Applicatio
 
     @Override public void onActivityDestroyed(Activity activity) {
         resumed.remove(activity);
+        greeted.remove(activity);
         StrongholdModOverlay overlay = overlays.remove(activity);
         if (overlay != null) overlay.detach();
     }
