@@ -8,7 +8,7 @@ import pathlib
 import re
 import sys
 
-METHOD="lambda$new$0$org-stronghold-port-CheatMenu"
+METHOD="lambda$new$2$org-stronghold-port-CheatMenu"
 HOOK="Lorg/stronghold/port/AdvancedCheatPanel;->openForView(Landroid/view/View;)V"
 
 def patch(root):
