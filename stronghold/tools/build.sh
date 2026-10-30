@@ -51,4 +51,5 @@ fi
 "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$output" | tee build/signature_verification.txt
 "$BUILD_TOOLS/zipalign" -c -P 16 4 "$output"
 python3 tests/test_apk.py "$original" "$output"
+python3 tools/verify_menu_apk.py "$output"
 printf 'Signed test APK: %s\n' "$output"
