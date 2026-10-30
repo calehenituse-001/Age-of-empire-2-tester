@@ -11,8 +11,16 @@ static func staged_ready(stage: String) -> bool:
 	var rpath := stage.path_join("data/rules.json")
 	if not FileAccess.file_exists(mpath) or not FileAccess.file_exists(rpath):
 		return false
-	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(mpath))
-	var rules: Variant = JSON.parse_string(FileAccess.get_file_as_string(rpath))
+	# JSON.parse_string() reports malformed input as a Godot engine ERROR.
+	# A damaged candidate is ordinary invalid user input, not a script crash.
+	var mparser := JSON.new()
+	var rparser := JSON.new()
+	if mparser.parse(FileAccess.get_file_as_string(mpath)) != OK:
+		return false
+	if rparser.parse(FileAccess.get_file_as_string(rpath)) != OK:
+		return false
+	var manifest: Variant = mparser.data
+	var rules: Variant = rparser.data
 	if not manifest is Dictionary or not rules is Dictionary:
 		return false
 	for section in ["terrain", "buildings", "resources", "anims"]:
