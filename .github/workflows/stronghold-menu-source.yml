@@ -42,7 +42,7 @@ jobs:
           javac -cp "build/source-check:$ANDROID_HOME/platforms/android-35/android.jar" \
             -d build/source-check tests/SettingsTest.java
           java -cp "build/source-check:$ANDROID_HOME/platforms/android-35/android.jar" SettingsTest
-          python3 -m py_compile tools/*.py tests/*.py
+          python3 -m py_compile tools/*.py tests/*.py asfatre_v13/*.py
           find build/source-check/org -name '*.class' > build/classes-to-dex.txt
           mkdir -p build/menu-dex
           mapfile -t classes < build/classes-to-dex.txt
