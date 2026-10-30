@@ -1,6 +1,12 @@
 # Import activation stability patch — 30 October 2026
 
-This branch makes on-device converted-data activation reversible. It is not a
+This branch makes on-device converted-data activation reversible.
+
+A headless CI regression caught and fixed a pre-existing cleanup defect: Godot's
+DirAccess excludes hidden files by default, leaving `.complete` / `.revision`
+inside old data folders and preventing deletion/rollback. The shared importer
+cleanup now explicitly includes hidden files and does not recurse through
+symbolic links. It is not a
 graphics/texture replacement and does not change gameplay rules.
 
 ## Fixed integration risks
