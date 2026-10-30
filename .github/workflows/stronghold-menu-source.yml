@@ -1,0 +1,45 @@
+name: Stronghold menu source check (no APK)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'stronghold/**'
+      - '.github/workflows/stronghold-menu-source.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  java-and-python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          cmdline-tools-version: 13114758
+      - name: Install only the compile-time Android API
+        run: sdkmanager 'platforms;android-35'
+      - name: Check Stronghold UI source and JVM settings
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd stronghold
+          mkdir -p build/source-check
+          find android -name '*.java' -print0 | xargs -0 javac -source 8 -target 8 \
+            -cp "$ANDROID_HOME/platforms/android-35/android.jar" \
+            -d build/source-check
+          javac -cp "build/source-check:$ANDROID_HOME/platforms/android-35/android.jar" \
+            -d build/source-check tests/SettingsTest.java
+          java -cp "build/source-check:$ANDROID_HOME/platforms/android-35/android.jar" SettingsTest
+          python3 -m py_compile tools/*.py tests/*.py
+          echo 'Source check passed. No patched APK or Android runtime test performed.'
+
+# Runs only for Stronghold-related pull requests or on manual dispatch. The original proprietary APK is NOT in this repo.
+# To package a signed Stronghold APK, follow stronghold/docs/BUILD.md with
+# the exact user-provided original launcher, outside this public CI workflow.

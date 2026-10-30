@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Rect;
+import android.graphics.PixelFormat;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.text.InputType;
@@ -30,6 +31,8 @@ import android.widget.Toast;
 public final class StrongholdModOverlay {
     private final Activity activity;
     private final FrameLayout decor;
+    private final WindowManager windowManager;
+    private final WindowManager.LayoutParams bubbleParams;
     private final Button bubble;
     private final SharedPreferences prefs;
     private final StrongholdNativeBridge bridge=new StrongholdNativeBridge();
@@ -42,6 +45,9 @@ public final class StrongholdModOverlay {
 
     public StrongholdModOverlay(Activity a) {
         activity=a;decor=(FrameLayout)a.getWindow().getDecorView();
+        windowManager=(WindowManager)a.getSystemService(Context.WINDOW_SERVICE);
+        if(windowManager==null || decor.getWindowToken()==null)
+            throw new IllegalStateException("Extreme window is not attached to WindowManager");
         prefs=a.getSharedPreferences("stronghold_mod_v33",Context.MODE_PRIVATE);
         normX=readPosition("button_x",0.96f);normY=readPosition("button_y",0.12f);
         slop=ViewConfiguration.get(a).getScaledTouchSlop();
@@ -49,11 +55,21 @@ public final class StrongholdModOverlay {
         bubble.setAllCaps(false);bubble.setPadding(0,0,0,0);bubble.setMinWidth(0);bubble.setMinHeight(0);
         bubble.setBackground(background(0xe619252c,12));bubble.setElevation(dp(100));
         bubble.setContentDescription("Buka Stronghold Mod Menu. Geser untuk memindahkan.");
-        FrameLayout.LayoutParams lp=new FrameLayout.LayoutParams(dp(64),dp(48),Gravity.TOP|Gravity.LEFT);
-        decor.addView(bubble,lp);
+        // Native game surfaces can be composited above normal Activity children.
+        // An application-attached panel stays above the game's SurfaceView
+        // without requesting the dangerous system-overlay permission.
+        bubbleParams=new WindowManager.LayoutParams(
+            dp(64),dp(48),WindowManager.LayoutParams.TYPE_APPLICATION_PANEL,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+              | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+              | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+            PixelFormat.TRANSLUCENT);
+        bubbleParams.token=decor.getWindowToken();
+        bubbleParams.gravity=Gravity.TOP|Gravity.LEFT;
+        windowManager.addView(bubble,bubbleParams);
         bubble.setOnClickListener(v->open());
         bubble.setOnTouchListener((v,event)->touch(event));
-        layoutListener=(v,l,t,r,b,ol,ot,or,ob)->{position();bubble.bringToFront();};
+        layoutListener=(v,l,t,r,b,ol,ot,or,ob)->position();
         decor.addOnLayoutChangeListener(layoutListener);
     }
     private float readPosition(String key,float fallback) {
@@ -61,38 +77,43 @@ public final class StrongholdModOverlay {
         catch(ClassCastException bad){return fallback;}
     }
     public void resume() {
-        bubble.setVisibility(View.VISIBLE);bubble.bringToFront();
+        bubble.setVisibility(View.VISIBLE);
         bridge.apply(ModSettings.load(prefs));
-        bubble.post(()->{if(bubble.getParent()!=null){position();bubble.bringToFront();}});
+        bubble.post(()->{if(bubble.getParent()!=null)position();});
     }
     public void pause() {if(dialog!=null)dialog.dismiss();bubble.setVisibility(View.GONE);}
-    public void detach() {pause();decor.removeOnLayoutChangeListener(layoutListener);decor.removeView(bubble);}
+    public void detach() {pause();decor.removeOnLayoutChangeListener(layoutListener);if(bubble.getParent()!=null)windowManager.removeViewImmediate(bubble);}
     private int dp(int value){return (int)(value*activity.getResources().getDisplayMetrics().density+0.5f);}
     private GradientDrawable background(int color,int radius) {
         GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;
     }
     private Rect bounds() {
-        Rect visible=new Rect();decor.getWindowVisibleDisplayFrame(visible);int[] loc=new int[2];decor.getLocationOnScreen(loc);
-        int left=Math.max(dp(4),visible.left-loc[0]+dp(4));
-        int top=Math.max(dp(4),visible.top-loc[1]+dp(4));
-        int right=Math.min(decor.getWidth(),visible.right-loc[0])-dp(68);
-        int bottom=Math.min(decor.getHeight(),visible.bottom-loc[1])-dp(52);
+        Rect visible=new Rect();decor.getWindowVisibleDisplayFrame(visible);
+        int left=Math.max(dp(4),visible.left+dp(4));
+        int top=Math.max(dp(4),visible.top+dp(4));
+        int right=visible.right-dp(68);
+        int bottom=visible.bottom-dp(52);
         return new Rect(left,top,Math.max(left,right),Math.max(top,bottom));
     }
     private void position() {
-        Rect b=bounds();bubble.setX(b.left+normX*b.width());bubble.setY(b.top+normY*b.height());
+        Rect b=bounds();bubbleParams.x=b.left+Math.round(normX*b.width());
+        bubbleParams.y=b.top+Math.round(normY*b.height());
+        if(bubble.getParent()!=null)windowManager.updateViewLayout(bubble,bubbleParams);
     }
     private boolean touch(MotionEvent e) {
         switch(e.getActionMasked()) {
         case MotionEvent.ACTION_DOWN:
-            dragging=false;downX=e.getRawX();downY=e.getRawY();startX=bubble.getX();startY=bubble.getY();return true;
+            dragging=false;downX=e.getRawX();downY=e.getRawY();startX=bubbleParams.x;startY=bubbleParams.y;return true;
         case MotionEvent.ACTION_MOVE:
             float dx=e.getRawX()-downX,dy=e.getRawY()-downY;
             if(dx*dx+dy*dy>slop*slop)dragging=true;
-            if(dragging){Rect b=bounds();bubble.setX(Math.max(b.left,Math.min(b.right,startX+dx)));bubble.setY(Math.max(b.top,Math.min(b.bottom,startY+dy)));bubble.bringToFront();}
+            if(dragging){Rect b=bounds();bubbleParams.x=Math.round(Math.max(b.left,Math.min(b.right,startX+dx)));
+                bubbleParams.y=Math.round(Math.max(b.top,Math.min(b.bottom,startY+dy)));
+                windowManager.updateViewLayout(bubble,bubbleParams);}
             return true;
         case MotionEvent.ACTION_UP:
-            if(dragging){Rect b=bounds();normX=b.width()>0?(bubble.getX()-b.left)/b.width():0;normY=b.height()>0?(bubble.getY()-b.top)/b.height():0;prefs.edit().putFloat("button_x",normX).putFloat("button_y",normY).apply();}
+            if(dragging){Rect b=bounds();normX=b.width()>0?(float)(bubbleParams.x-b.left)/b.width():0;
+                normY=b.height()>0?(float)(bubbleParams.y-b.top)/b.height():0;prefs.edit().putFloat("button_x",normX).putFloat("button_y",normY).apply();}
             else bubble.performClick();return true;
         case MotionEvent.ACTION_CANCEL:position();return true;
         default:return true;
@@ -152,7 +173,7 @@ public final class StrongholdModOverlay {
         Button apply=button("Apply & Save"), resetAll=button("Reset All"), close=button("Tutup");
         actions.addView(apply,new LinearLayout.LayoutParams(0,dp(52),1));actions.addView(resetAll,new LinearLayout.LayoutParams(0,dp(52),1));actions.addView(close,new LinearLayout.LayoutParams(0,dp(52),1));panel.addView(actions);
         dialog=new AlertDialog.Builder(activity,android.R.style.Theme_Material_Dialog_NoActionBar).setView(panel).create();
-        dialog.setOnDismissListener(d->{if(dialog==d)dialog=null;bubble.bringToFront();});
+        dialog.setOnDismissListener(d->{if(dialog==d)dialog=null;});
         apply.setEnabled(installed);apply.setOnClickListener(v->{
             try {draft.spawnMilli=ModSettings.parseMultiplier(multiplier.getText().toString());}
             catch(IllegalArgumentException bad){multiplier.setError(bad.getMessage());worker.setVisibility(View.VISIBLE);multiplier.requestFocus();return;}

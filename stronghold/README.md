@@ -18,6 +18,14 @@ Semua mod memakai pemeriksaan owner pada setiap event. Sesi selain kandidat offl
 
 Production multiplier untuk semua bahan, makanan, senjata, dan armor belum dipasang. Unlimited makanan, input bahan baku industri, dan penggunaan stok nol belum didukung. Gold dan peralatan tetap memerlukan saldo/stok awal yang memenuhi pemeriksaan asli. Recruitment/Construction Speed atau Instant belum tersedia karena timer yang sesuai belum tervalidasi. Crusader HD dan Stronghold Classic tidak dipatch. Batas pasukan asli tidak berubah.
 
+## Perbaikan bootstrap MOD (branch perbaikan)
+
+Jika tombol **MOD** tidak terlihat setelah masuk Extreme, lihat [diagnosis menu](docs/MENU_NOT_VISIBLE.md).
+Provider sekarang menunda pemasangan tombol hingga decor view terpasang, dan menulis log `StrongholdModBoot` untuk membedakan masalah startup, activity, dan rendering.
+Jalankan `python3 tools/verify_menu_apk.py path/ke/APK.apk` untuk memeriksa bahwa provider, DEX, dan library telah masuk APK hasil build. Pemeriksaan ini **tidak membuktikan tombol terlihat pada Android**.
+
+GitHub Actions utama di repositori ini membangun launcher **AoE II**, bukan Stronghold. Pemeriksaan source Stronghold yang dapat dijalankan manual ada di workflow `Stronghold menu source check (no APK)`. Build Stronghold tetap menggunakan `tools/build.sh` dan APK original milik pengguna sebagaimana dijelaskan dalam [petunjuk build](docs/BUILD.md).
+
 ## Berkas
 
 - [Laporan teknis](docs/TECHNICAL_REPORT.md): hook, hashes, identitas, batas, hasil pengujian.
