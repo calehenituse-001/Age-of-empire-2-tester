@@ -1,0 +1,11 @@
+.gradle/
+**/build/
+**/.godot/
+local.properties
+*.apk
+*.pck
+*.jks
+*.keystore
+godot_game/assets/aoe/
+artifacts/
+__pycache__/

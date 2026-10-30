@@ -1,0 +1,42 @@
+config_version=5
+
+[application]
+
+config/name="Age of Android"
+config/icon="res://icon.svg"
+config/quit_on_go_back=false
+run/main_scene="res://scenes/boot.tscn"
+run/flush_stdout_on_print=true
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[autoload]
+
+GameLog="*res://scripts/game_log.gd"
+Rules="*res://scripts/rules.gd"
+Assets="*res://scripts/assets.gd"
+Sfx="*res://scripts/sfx.gd"
+
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/max_log_files=6
+
+[display]
+
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/stretch/mode="disabled"
+window/handheld/orientation=4
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+pointing/emulate_mouse_from_touch=false
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+textures/canvas_textures/default_texture_filter=1
+environment/defaults/default_clear_color=Color(0.05, 0.07, 0.05, 1)
