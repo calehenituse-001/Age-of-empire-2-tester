@@ -111,7 +111,7 @@ func _drag(event: InputEvent) -> void:
 		elif event.index == touch_index:
 			touch_index = -1
 	elif event is InputEventScreenDrag and event.index == touch_index:
-		_move(event.position - drag_start)
+		_move(floating.position + event.relative - button_start)
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		dragging = event.pressed
 		if dragging:

@@ -14,7 +14,7 @@ func configure(data: Dictionary) -> void:
 		values[key] = data.get(key) is bool and data.get(key, false) == true
 	for kind in ["resource", "build", "train", "research"]:
 		var n: Variant = data.get(kind + "_factor", 2)
-		values[kind + "_factor"] = int(n) if (n is int or n is float) and n in FACTORS else 2
+		values[kind + "_factor"] = int(n) if (n is int or n is float) and int(n) in FACTORS and float(n) == float(int(n)) else 2
 	var limit: Variant = data.get("population_limit", 500)
 	values.population_limit = clampi(int(limit), 1, 1000) if limit is int or limit is float else 500
 

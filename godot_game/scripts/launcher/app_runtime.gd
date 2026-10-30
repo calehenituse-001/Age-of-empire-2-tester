@@ -11,7 +11,7 @@ var overlay: CanvasLayer
 
 func _ready() -> void:
 	root = ProjectSettings.globalize_path("user://AgeOfEmpires2")
-	if OS.has_feature("Android") and Engine.has_singleton("LauncherBridge"):
+	if OS.has_feature("android") and Engine.has_singleton("LauncherBridge"):
 		bridge = Engine.get_singleton("LauncherBridge")
 		root = bridge.rootPath()
 		safe_mode = bridge.safeMode()

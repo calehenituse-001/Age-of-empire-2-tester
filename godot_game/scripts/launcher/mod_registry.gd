@@ -78,7 +78,7 @@ func prepare(root: String, enabled: Array) -> bool:
 			var b: Dictionary = row.duplicate(true)
 			if not integer(b, "id", 900000, 999999) or used.has(b.id) or not valid_id(b.get("key")) or keys.has(b.key) or Defs.BUILDINGS.has(b.key):
 				return _fail("Invalid/conflicting building ID or key: " + id)
-			if not b.get("baseId") in [70, 562, 584, 68] or not b.get("name") is String or b.name.length() not in range(1, 81):
+			if not integer(b, "baseId", 0, 10000) or not int(b.baseId) in [70, 562, 584, 68] or not b.get("name") is String or b.name.length() not in range(1, 81):
 				return _fail("Unsupported building base/name: " + id)
 			if not integer(b, "size", 1, 4) or not integer(b, "hp", 1, 100000) or not integer(b, "population", 0, 50) or not integer(b, "requiredAge", 0, 3) or not number(b, "seconds", 1, 3600):
 				return _fail("Invalid building bounds: " + id)

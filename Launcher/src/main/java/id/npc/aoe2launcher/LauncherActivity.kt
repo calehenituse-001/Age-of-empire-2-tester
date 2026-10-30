@@ -78,7 +78,7 @@ class LauncherActivity: Activity() {
     private fun settings() {
         val c=storage.read("Config/launcher.json"); page("Game settings","Applies to new games. Civilization, sound and touch controls remain available in the original in-game settings.")
         for((key,values) in mapOf("difficulty" to listOf("easy","medium","hard"),"opponent" to listOf("rival","raids")))
-            button("$key: ${c.optString(key,values.first())}") { choose(key,values) { configSet(key,values[it]); settings() } }
+            button("$key: ${c.optString(key,if(key=="difficulty") "medium" else "rival")}") { choose(key,values) { configSet(key,values[it]); settings() } }
         button("Map size: ${c.optInt("mapSize",128)}") { choose("Map size",listOf("96","128","160")) { configSet("mapSize",listOf(96,128,160)[it]); settings() } }
         button("START NEW GAME · automatic save backup") { launch(false,false) }; button("BACK",::home)
     }
