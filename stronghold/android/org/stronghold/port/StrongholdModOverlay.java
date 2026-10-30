@@ -26,6 +26,7 @@ import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.util.Log;
 
 /** A single small decor child when closed. No full-screen invisible touch interceptor. */
 public final class StrongholdModOverlay {
@@ -33,6 +34,7 @@ public final class StrongholdModOverlay {
     private final FrameLayout decor;
     private final WindowManager windowManager;
     private final WindowManager.LayoutParams bubbleParams;
+    private final boolean attachedAsPanel;
     private final Button bubble;
     private final SharedPreferences prefs;
     private final StrongholdNativeBridge bridge=new StrongholdNativeBridge();
@@ -49,11 +51,11 @@ public final class StrongholdModOverlay {
         if(windowManager==null || decor.getWindowToken()==null)
             throw new IllegalStateException("Extreme window is not attached to WindowManager");
         prefs=a.getSharedPreferences("stronghold_mod_v33",Context.MODE_PRIVATE);
-        normX=readPosition("button_x",0.96f);normY=readPosition("button_y",0.12f);
+        normX=readPosition("button_x",0.35f);normY=readPosition("button_y",0.34f);
         slop=ViewConfiguration.get(a).getScaledTouchSlop();
-        bubble=new Button(a);bubble.setText("MOD");bubble.setTextSize(16);bubble.setTextColor(FG);
+        bubble=new Button(a);bubble.setText("MOD");bubble.setTextSize(17);bubble.setTextColor(0xff171717);
         bubble.setAllCaps(false);bubble.setPadding(0,0,0,0);bubble.setMinWidth(0);bubble.setMinHeight(0);
-        bubble.setBackground(background(0xe619252c,12));bubble.setElevation(dp(100));
+        bubble.setBackground(background(0xfff4ce55,12));bubble.setElevation(dp(100));
         bubble.setContentDescription("Buka Stronghold Mod Menu. Geser untuk memindahkan.");
         // Native game surfaces can be composited above normal Activity children.
         // An application-attached panel stays above the game's SurfaceView
@@ -66,7 +68,16 @@ public final class StrongholdModOverlay {
             PixelFormat.TRANSLUCENT);
         bubbleParams.token=decor.getWindowToken();
         bubbleParams.gravity=Gravity.TOP|Gravity.LEFT;
-        windowManager.addView(bubble,bubbleParams);
+        boolean panel = false;
+        try {
+            windowManager.addView(bubble,bubbleParams);
+            panel = true;
+            Log.i("StrongholdModBoot", "MOD button attached as application panel");
+        } catch (RuntimeException e) {
+            Log.e("StrongholdModBoot", "Panel failed; trying Activity decor fallback", e);
+            decor.addView(bubble,new FrameLayout.LayoutParams(dp(64),dp(48),Gravity.TOP|Gravity.LEFT));
+        }
+        attachedAsPanel=panel;
         bubble.setOnClickListener(v->open());
         bubble.setOnTouchListener((v,event)->touch(event));
         layoutListener=(v,l,t,r,b,ol,ot,or,ob)->position();
@@ -82,7 +93,14 @@ public final class StrongholdModOverlay {
         bubble.post(()->{if(bubble.getParent()!=null)position();});
     }
     public void pause() {if(dialog!=null)dialog.dismiss();bubble.setVisibility(View.GONE);}
-    public void detach() {pause();decor.removeOnLayoutChangeListener(layoutListener);if(bubble.getParent()!=null)windowManager.removeViewImmediate(bubble);}
+    public void detach() {
+        pause();
+        decor.removeOnLayoutChangeListener(layoutListener);
+        if(bubble.getParent()!=null) {
+            if(attachedAsPanel)windowManager.removeViewImmediate(bubble);
+            else decor.removeView(bubble);
+        }
+    }
     private int dp(int value){return (int)(value*activity.getResources().getDisplayMetrics().density+0.5f);}
     private GradientDrawable background(int color,int radius) {
         GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;
@@ -96,24 +114,33 @@ public final class StrongholdModOverlay {
         return new Rect(left,top,Math.max(left,right),Math.max(top,bottom));
     }
     private void position() {
-        Rect b=bounds();bubbleParams.x=b.left+Math.round(normX*b.width());
-        bubbleParams.y=b.top+Math.round(normY*b.height());
-        if(bubble.getParent()!=null)windowManager.updateViewLayout(bubble,bubbleParams);
+        Rect b=bounds();int x=b.left+Math.round(normX*b.width());
+        int y=b.top+Math.round(normY*b.height());
+        if(attachedAsPanel) {
+            bubbleParams.x=x;bubbleParams.y=y;
+            if(bubble.getParent()!=null)windowManager.updateViewLayout(bubble,bubbleParams);
+        } else {bubble.setX(x);bubble.setY(y);bubble.bringToFront();}
     }
     private boolean touch(MotionEvent e) {
         switch(e.getActionMasked()) {
         case MotionEvent.ACTION_DOWN:
-            dragging=false;downX=e.getRawX();downY=e.getRawY();startX=bubbleParams.x;startY=bubbleParams.y;return true;
+            dragging=false;downX=e.getRawX();downY=e.getRawY();startX=attachedAsPanel?bubbleParams.x:bubble.getX();startY=attachedAsPanel?bubbleParams.y:bubble.getY();return true;
         case MotionEvent.ACTION_MOVE:
             float dx=e.getRawX()-downX,dy=e.getRawY()-downY;
             if(dx*dx+dy*dy>slop*slop)dragging=true;
-            if(dragging){Rect b=bounds();bubbleParams.x=Math.round(Math.max(b.left,Math.min(b.right,startX+dx)));
-                bubbleParams.y=Math.round(Math.max(b.top,Math.min(b.bottom,startY+dy)));
-                windowManager.updateViewLayout(bubble,bubbleParams);}
+            if(dragging){
+                Rect b=bounds();
+                int x=Math.round(Math.max(b.left,Math.min(b.right,startX+dx)));
+                int y=Math.round(Math.max(b.top,Math.min(b.bottom,startY+dy)));
+                if(attachedAsPanel){bubbleParams.x=x;bubbleParams.y=y;windowManager.updateViewLayout(bubble,bubbleParams);}
+                else {bubble.setX(x);bubble.setY(y);bubble.bringToFront();}
+            }
             return true;
         case MotionEvent.ACTION_UP:
-            if(dragging){Rect b=bounds();normX=b.width()>0?(float)(bubbleParams.x-b.left)/b.width():0;
-                normY=b.height()>0?(float)(bubbleParams.y-b.top)/b.height():0;prefs.edit().putFloat("button_x",normX).putFloat("button_y",normY).apply();}
+            if(dragging){Rect b=bounds();float x=attachedAsPanel?bubbleParams.x:bubble.getX();
+                float y=attachedAsPanel?bubbleParams.y:bubble.getY();
+                normX=b.width()>0?(x-b.left)/b.width():0;
+                normY=b.height()>0?(y-b.top)/b.height():0;prefs.edit().putFloat("button_x",normX).putFloat("button_y",normY).apply();}
             else bubble.performClick();return true;
         case MotionEvent.ACTION_CANCEL:position();return true;
         default:return true;
