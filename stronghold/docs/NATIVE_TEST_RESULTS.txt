@@ -1,0 +1,12 @@
+Actual ARM64 execution under Unicorn; synthetic guest state; NOT Android gameplay.
+
+test_gold_each_site_owner_aslr_registers (__main__.HookTests.test_gold_each_site_owner_aslr_registers) ... ok
+test_gold_income_and_identity_fail_closed (__main__.HookTests.test_gold_income_and_identity_fail_closed) ... ok
+test_inventory_dispatch_sources_flags_stock (__main__.HookTests.test_inventory_dispatch_sources_flags_stock) ... ok
+test_inventory_original_epilogue_virtual_stack (__main__.HookTests.test_inventory_original_epilogue_virtual_stack) ... ok
+test_peasant_rate_limits_decimal_and_owner (__main__.HookTests.test_peasant_rate_limits_decimal_and_owner) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.520s
+
+OK

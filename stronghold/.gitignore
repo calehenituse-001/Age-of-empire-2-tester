@@ -1,0 +1,12 @@
+build/
+inputs/
+toolchain/
+__pycache__/
+*.apk
+*.so
+*.exe
+*.pem
+*.pk8
+*.der
+*.keystore
+*.jks

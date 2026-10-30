@@ -1,0 +1,20 @@
+{
+  "apk_sha256": "92dc03003274dcac024d63a66e61fab75f9f5b26bb3bcd01c89f935bfa22d252",
+  "package": "org.stronghold.port",
+  "version_name": "0.3.1-DEV",
+  "version_code": "28",
+  "min_sdk": "28",
+  "target_sdk": "28",
+  "library_and_dex_hashes": {
+    "classes.dex": "d4e308d1d138d5e080d9b6fc6c900c01723a44ee7fd91b7bad90ef0baf6c33d1",
+    "lib/arm64-v8a/libstronghold.so": "c93f34086c06bf7b49530b3297f4aba51ef7b59d95a9aff3661bfb090c1a1539",
+    "lib/arm64-v8a/libstronghold_classic.so": "31d29643d073b72ae624550d3e6ec80a0c0e272c69c43dc3e568049d03f49305",
+    "lib/arm64-v8a/libstronghold_sh.so": "a3a080ea9384ffee3052e01999102adb0aa48554d8e69310654b861b0279798d"
+  },
+  "library_mapping_verified_in_original_dex": {
+    "libstronghold.so": "Stronghold Crusader Extreme HD",
+    "libstronghold_classic.so": "Stronghold Crusader HD",
+    "libstronghold_sh.so": "Stronghold Classic HD"
+  },
+  "extreme_exe_sha256": "0c90204f7bf622b768cc1fd9ebc0ec5c6cf8e60ea84911c0fdc7ffcbb2119ba8"
+}

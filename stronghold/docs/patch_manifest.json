@@ -1,0 +1,102 @@
+{
+  "original_sha256": "c93f34086c06bf7b49530b3297f4aba51ef7b59d95a9aff3661bfb090c1a1539",
+  "patched_sha256": "9baf2492b96b14b83414fb166694cb94ffd634d16a4c570ff0d242a295290bfb",
+  "code_va": 50626704,
+  "code_offset": 50610320,
+  "code_size": 3521,
+  "inserted_size": 16384,
+  "control_va": 63447120,
+  "signature_va": 50630216,
+  "sites": [
+    {
+      "site": 0,
+      "name": "regular_recruit",
+      "va": 38931180,
+      "offset": 38914796,
+      "original": "f10100b9",
+      "patched": "699d2c14",
+      "target": 50626704,
+      "instruction": "str w17, [x15]"
+    },
+    {
+      "site": 1,
+      "name": "arab_recruit",
+      "va": 38933776,
+      "offset": 38917392,
+      "original": "110200b9",
+      "patched": "0b9b2c14",
+      "target": 50626876,
+      "instruction": "str w17, [x16]"
+    },
+    {
+      "site": 2,
+      "name": "market_purchase",
+      "va": 46624912,
+      "offset": 46608528,
+      "original": "cf0100b9",
+      "patched": "56440f14",
+      "target": 50627048,
+      "instruction": "str w15, [x14]"
+    },
+    {
+      "site": 3,
+      "name": "trade_purchase",
+      "va": 46319560,
+      "offset": 46303176,
+      "original": "110200b9",
+      "patched": "b36e1014",
+      "target": 50627220,
+      "instruction": "str w17, [x16]"
+    },
+    {
+      "site": 4,
+      "name": "siege_action",
+      "va": 43851152,
+      "offset": 43834768,
+      "original": "cd0100b9",
+      "patched": "6cd91914",
+      "target": 50627392,
+      "instruction": "str w13, [x14]"
+    },
+    {
+      "site": 5,
+      "name": "gold_transfer",
+      "va": 43512488,
+      "offset": 43496104,
+      "original": "490100b9",
+      "patched": "51241b14",
+      "target": 50627564,
+      "instruction": "str w9, [x10]"
+    },
+    {
+      "site": 6,
+      "name": "ally_gold",
+      "va": 43765632,
+      "offset": 43749248,
+      "original": "110200b9",
+      "patched": "462d1a14",
+      "target": 50627736,
+      "instruction": "str w17, [x16]"
+    },
+    {
+      "site": 7,
+      "name": "inventory_debit",
+      "va": 46487920,
+      "offset": 46471536,
+      "original": "883d0034",
+      "patched": "f5ca0f14",
+      "target": 50627908,
+      "instruction": "cbz w8, original_zero"
+    },
+    {
+      "site": 8,
+      "name": "peasant_rate",
+      "va": 34113696,
+      "offset": 34097312,
+      "original": "2f0200b9",
+      "patched": "55ff3e14",
+      "target": 50628084,
+      "instruction": "str w15, [x17]"
+    }
+  ]
+}

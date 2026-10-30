@@ -1,0 +1,14 @@
+feature,status,scope,Android_runtime_tested
+Floating menu + settings + JNI,Implemented but runtime-untested,Extreme activity,No
+Unlimited Gold,Implemented but runtime-untested,Seven direct debit sites plus inventory Gold; initial balance required,No
+Unlimited Wood / Stone / Iron / Pitch,Implemented but runtime-untested,Mapped construction-cost callers; positive stock,No
+Unlimited Bow / Crossbow / Spear / Pike / Mace / Sword / Leather / Metal,Implemented but runtime-untested,Regular recruitment callers; positive stock,No
+Peasant Spawn x1-100 / Instant,Implemented but runtime-untested,Positive spawn rate only; original conditions and limits,No
+Food Unlimited,Unsupported,Unavailable in v3.3,No
+Production multipliers x1-100 for all resources and equipment,Unsupported,Unavailable in v3.3,No
+Unlimited industrial input consumption,Unsupported,Unavailable in v3.3,No
+Zero-stock bypass,Unsupported,Unavailable in v3.3,No
+Recruitment Speed / Instant Recruitment,Unsupported,Unavailable in v3.3,No
+Construction Speed / Instant Construction,Unsupported,Unavailable in v3.3,No
+Crusader HD and Stronghold Classic hooks,Unsupported,Unavailable in v3.3,No
+AI isolation in real gameplay,Not verified,Static gate + synthetic ARM64 tests only,No

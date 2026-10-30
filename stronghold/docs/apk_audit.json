@@ -1,0 +1,16 @@
+{
+  "apk_sha256": "f29c2c918f9880f958f720df6844682d4824c3cde16b334111abd693b3728902",
+  "apk_bytes": 61220518,
+  "original_apk_sha256": "92dc03003274dcac024d63a66e61fab75f9f5b26bb3bcd01c89f935bfa22d252",
+  "size_increase_bytes": 16530,
+  "unchanged_original_entries": 15,
+  "original_dex_preserved": true,
+  "original_other_libraries_preserved": true,
+  "manifest_provider": "non-exported, :extreme",
+  "package": "org.stronghold.port",
+  "min_sdk": 28,
+  "target_sdk": 28,
+  "patched_sites": 9,
+  "runtime_android_tested": false,
+  "native_arm64_emulated": true
+}
