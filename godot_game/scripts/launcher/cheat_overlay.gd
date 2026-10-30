@@ -46,7 +46,7 @@ func setup(owner_main: Main) -> void:
 	for key: String in CheatPolicy.FLAGS:
 		var b := _button("")
 		b.toggle_mode = true
-		b.button_pressed = bool(AppRuntime.cheats.values[key])
+		b.button_pressed = AppRuntime.cheats.enabled(key)
 		b.disabled = not AppRuntime.cheats.eligible()
 		b.text = LABELS[key] + (" · ON" if b.button_pressed else " · OFF")
 		b.toggled.connect(func(on: bool) -> void:

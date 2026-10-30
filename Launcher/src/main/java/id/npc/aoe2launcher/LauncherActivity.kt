@@ -56,7 +56,7 @@ class LauncherActivity: Activity() {
         }
     }
     private fun configSet(k: String,v: Any) { val c=storage.read("Config/launcher.json"); c.put(k,v); storage.write("Config/launcher.json",c) }
-    private fun activeMods()=ModPackages.strings(storage.read("Config/mods.json").optJSONArray("enabled"))
+    private fun activeMods()=runCatching { ModPackages.strings(storage.read("Config/mods.json").optJSONArray("enabled")) }.getOrElse { storage.log("Invalid mod selection: ${it.message}"); emptyList() }
     private fun home() {
         page("AGE OF EMPIRES II","Custom Launcher · 0.1.0 · Offline single-player\n${if(storage.file("GameData/raw/.revision").exists()) "Game files imported" else "Import your own AoE2 HD (2013) files to begin"}")
         button("PLAY GAME") { launch(false,true) }; button("GAME SETTINGS",::settings); button("PERFORMANCE SETTINGS",::performance)

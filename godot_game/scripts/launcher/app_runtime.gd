@@ -37,10 +37,11 @@ func _ready() -> void:
 	cheats.offline = true
 	cheats.session_check = is_offline
 	var enabled: Variant = read_json("Config/mods.json").get("enabled", [])
-	if not enabled is Array:
-		mods.error = "Invalid mod selection. Use Safe Mode and reselect mods."
-	elif not safe_mode:
-		mods.prepare(root.path_join("Mods"), enabled)
+	if not safe_mode:
+		if not enabled is Array:
+			mods.error = "Invalid mod selection. Use Safe Mode and reselect mods."
+		else:
+			mods.prepare(root.path_join("Mods"), enabled)
 	SaveGame.MANUAL = save_path("save.json")
 	SaveGame.AUTO = save_path("autosave.json")
 	Importer.DEST = root.path_join("GameData/importing")
