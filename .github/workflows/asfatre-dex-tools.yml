@@ -1,0 +1,29 @@
+name: Asfatre Dex tools (no game APK)
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/asfatre-dex-tools.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  fetch-tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download pinned community smali tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/asfatre-dex-tools
+          curl -fsSL --retry 3 'https://github.com/PhantomZone54/JesusFreke_smali_Snapshots/releases/download/Snapshot/baksmali-2.5.2-cbd41d36-fat.jar' -o artifacts/asfatre-dex-tools/baksmali.jar
+          curl -fsSL --retry 3 'https://github.com/PhantomZone54/JesusFreke_smali_Snapshots/releases/download/Snapshot/smali-2.5.2-cbd41d36-fat.jar' -o artifacts/asfatre-dex-tools/smali.jar
+          java -jar artifacts/asfatre-dex-tools/baksmali.jar --version
+          java -jar artifacts/asfatre-dex-tools/smali.jar --version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Asfatre-Dex-Toolchain
+          path: artifacts/asfatre-dex-tools/
+          if-no-files-found: error
