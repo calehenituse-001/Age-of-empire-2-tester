@@ -14,7 +14,7 @@ HOOK="Lorg/stronghold/port/AdvancedCheatPanel;->openForView(Landroid/view/View;)
 def patch(root):
     path=pathlib.Path(root)/"org/stronghold/port/CheatMenu.smali"
     src=path.read_text(encoding="utf-8")
-    pat=r"(?ms)^\\.method[^\\n]*\\b"+re.escape(METHOD)+r"\\(Landroid/view/View;\\)V\\n.*?^\\.end method"
+    pat=r"(?ms)^\.method[^\n]*\b"+re.escape(METHOD)+r"\(Landroid/view/View;\)V\n.*?^\.end method"
     # Check regex cautiously; method must be private synthetic and contain
     # the original update logic. Do not accept already-patched or other versions.
     matches=list(re.finditer(pat,src))
@@ -24,9 +24,9 @@ def patch(root):
     if "refresh()V" not in old or "iput-boolean" not in old:
         raise ValueError("Original CheatMenu click implementation differs; refusing patch")
     header=old.splitlines()[0]
-    new=header+"\\n    .locals 0\\n"+\
-        "    invoke-static {p1}, "+HOOK+"\\n"+\
-        "    return-void\\n.end method"
+    new=header+"\n    .locals 0\n"+\
+        "    invoke-static {p1}, "+HOOK+"\n"+\
+        "    return-void\n.end method"
     path.write_text(src[:matches[0].start()]+new+src[matches[0].end():],encoding="utf-8")
     print("Patched Asfatre Cheat click to AdvancedCheatPanel.openForView")
 
