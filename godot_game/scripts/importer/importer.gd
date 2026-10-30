@@ -5,7 +5,7 @@ extends RefCounted
 ## cancelled or killed import goes on where it stopped.
 
 const VERSION := 1
-const DEST := "user://gamedata"
+static var DEST := "user://gamedata"
 
 ## Files the import cannot do without (relative to the game folder), and what they are for.
 const REQUIRED := {

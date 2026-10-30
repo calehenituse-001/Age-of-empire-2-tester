@@ -430,7 +430,7 @@ func start_place(kind: String) -> void:
 		toast(lock)
 		return
 	var cost: Dictionary = Defs.BUILDINGS[kind].cost
-	if not map.can_afford(cost):
+	if not map.can_afford(cost, "build"):
 		toast("Not enough resources (%s)" % Defs.cost_text(cost))
 		return
 	cancel_place()
@@ -522,14 +522,14 @@ func confirm_place() -> void:
 	if not place_ok:
 		toast("Can't build there")
 		return
-	if not map.can_afford(cost):
+	if not map.can_afford(cost, "build"):
 		toast("Not enough resources (%s)" % Defs.cost_text(cost))
 		return
 	var builders := _builders_for(Vector2(place_origin))
 	if builders.is_empty():
 		toast("You need a villager to build")
 		return
-	map.pay(cost)
+	var receipt := map.pay(cost, "build")
 	var origin := place_origin
 	var axis := place_axis
 	cancel_place()
@@ -539,6 +539,8 @@ func confirm_place() -> void:
 			if w and w.kind == "wall" and w.team == 0:
 				map.on_building_destroyed(w, true)
 	var b := map.place_building(kind, origin, false, axis)
+	b.cost_tracked = true
+	b.paid_cost = receipt
 	for v in builders:
 		v.order_build(b)
 	Chatter.say_some(builders, "build")
@@ -678,7 +680,8 @@ func _confirm_wall() -> void:
 		toast("Tap where the wall starts and where it turns first")
 		return
 	var each := int(Defs.BUILDINGS.wall.cost.stone)
-	var n := mini(cells.size(), int(map.stock.stone) / each)
+	var free := AppRuntime.cheats.enabled("stone") or AppRuntime.cheats.enabled("free_build")
+	var n := cells.size() if free or each <= 0 else mini(cells.size(), int(map.stock.stone) / each)
 	if n == 0:
 		toast("Not enough stone (%d each)" % each)
 		return
@@ -688,10 +691,13 @@ func _confirm_wall() -> void:
 		return
 	var total := cells.size()
 	cells.resize(n)
-	map.pay({"stone": n * each})
+	var receipt := map.pay({"stone": n * each}, "build")
 	var sites: Array[Building] = []
 	for c in cells:
-		sites.append(map.place_building("wall", c, false))
+		var site := map.place_building("wall", c, false)
+		site.cost_tracked = true
+		site.paid_cost = {"stone": int(receipt.stone) / n}
+		sites.append(site)
 	# each builder takes a stretch of the wall and works along it
 	var per := ceili(float(n) / builders.size())
 	for i in builders.size():

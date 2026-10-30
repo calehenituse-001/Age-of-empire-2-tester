@@ -61,6 +61,8 @@ func load_rules() -> void:
 	terrains = d.terrains
 	for a: Dictionary in d.tree.ages:
 		age_buildings.append(a.buildings)
+	if not AppRuntime.mods.apply_rules(self):
+		return
 	loaded = true
 
 

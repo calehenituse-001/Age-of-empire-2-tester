@@ -1,0 +1,13 @@
+{
+  "formatVersion": 1,
+  "id": "npc.modern-era",
+  "name": "Modern Era Expansion",
+  "version": "0.1.0",
+  "author": "NPC launcher contributors",
+  "gameVersion": "aoe2hd-beta-source-1",
+  "frameworkVersion": "1.0.0",
+  "dependencies": [],
+  "capabilities": [
+    "buildings.add"
+  ]
+}

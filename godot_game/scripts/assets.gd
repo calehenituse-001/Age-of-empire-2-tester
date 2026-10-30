@@ -6,6 +6,10 @@ var man: Dictionary = {}
 var terrain_set: TileSet
 var terrain_source: Dictionary = {}   # terrain name -> tile set source id
 var _tex: Dictionary = {}
+var _weak_tex: Dictionary = {}
+var _tex_order: Array[String] = []
+var _tex_bytes := 0
+var _anim_order: Array[String] = []
 var _anims: Dictionary = {}
 var terr: Dictionary = {}              # terrain.json: tile sheets by terrain id and the blend mask sheet
 var _terr_img: Dictionary = {}
@@ -20,6 +24,10 @@ func _ready() -> void:
 ## Reads the tables of the extracted game; does nothing while there is no game data yet (portable version before its import).
 func load_all() -> void:
 	_tex.clear()
+	_weak_tex.clear()
+	_tex_order.clear()
+	_tex_bytes = 0
+	_anim_order.clear()
 	_anims.clear()
 	_masks.clear()
 	_terr_img.clear()
@@ -38,6 +46,7 @@ func load_all() -> void:
 		man["cons_of"] = u.get("cons_of", {})
 	if GameData.exists("terrain.json"):
 		terr = GameData.json("terrain.json")
+	AppRuntime.mods.apply_assets(self)
 	_build_terrain_set()
 
 
@@ -52,9 +61,22 @@ func site(unit_id: int, bsize: int) -> Dictionary:
 
 func tex(file: String) -> Texture2D:
 	var t: Texture2D = _tex.get(file)
+	if t == null and _weak_tex.has(file):
+		t = _weak_tex[file].get_ref()
 	if t == null:
 		t = GameData.texture(file)
-		_tex[file] = t
+	if t != null:
+		if not _tex.has(file):
+			_tex_bytes += t.get_width() * t.get_height() * 4
+			_tex[file] = t
+			_weak_tex[file] = weakref(t)
+		_tex_order.erase(file)
+		_tex_order.append(file)
+		while _tex_bytes > AppRuntime.cache_budget() and _tex_order.size() > 1:
+			var old: String = _tex_order.pop_front()
+			var previous: Texture2D = _tex[old]
+			_tex_bytes -= previous.get_width() * previous.get_height() * 4
+			_tex.erase(old)
 	return t
 
 
@@ -81,9 +103,13 @@ func _build_terrain_set() -> void:
 func anim(key: String) -> Dictionary:
 	var a: Dictionary = _anims.get(key, {})
 	if a.is_empty():
-		a = man.anims[key]
+		a = man.anims[key].duplicate()
 		a["tex"] = tex(a.file)
 		_anims[key] = a
+	_anim_order.erase(key)
+	_anim_order.append(key)
+	while _anim_order.size() > (48 if AppRuntime.reduced_effects() else 128):
+		_anims.erase(_anim_order.pop_front())
 	return a
 
 
@@ -153,3 +179,9 @@ func apply_resource(s: Sprite2D, rname: String, variant: int) -> void:
 	s.region_enabled = true
 	s.region_rect = Rect2(it.x, it.y, it.w, it.h)
 	s.offset = -Vector2(it.hx, it.hy)
+
+
+func release_terrain_cpu_cache() -> void:
+	_terr_img.clear()
+	_masks.clear()
+	_blend_img = null

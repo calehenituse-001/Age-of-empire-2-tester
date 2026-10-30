@@ -12,6 +12,7 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 [autoload]
 
 GameLog="*res://scripts/game_log.gd"
+AppRuntime="*res://scripts/launcher/app_runtime.gd"
 Rules="*res://scripts/rules.gd"
 Assets="*res://scripts/assets.gd"
 Sfx="*res://scripts/sfx.gd"

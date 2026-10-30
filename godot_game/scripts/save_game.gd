@@ -1,8 +1,8 @@
 class_name SaveGame
 ## Saves and loads a whole game as JSON in the app's private storage (one manual slot, one autosave).
 
-const MANUAL := "user://save.json"
-const AUTO := "user://autosave.json"
+static var MANUAL := "user://save.json"
+static var AUTO := "user://autosave.json"
 const VERSION := 6
 
 
@@ -25,16 +25,43 @@ static func read(path: String) -> Dictionary:
 	if f == null:
 		return {}
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
-	if parsed is Dictionary and int(parsed.get("version", 0)) == VERSION:
+	if parsed is Dictionary and valid_snapshot(parsed) and parsed.get("mod_fingerprint", "vanilla") == AppRuntime.mods.fingerprint:
 		return parsed
 	return {}
 
 
 static func write(path: String, main: Node) -> bool:
-	var f := FileAccess.open(path, FileAccess.WRITE)
+	var f := FileAccess.open(path + ".part", FileAccess.WRITE)
 	if f == null:
 		return false
 	f.store_string(JSON.stringify(snapshot(main)))
+	f.flush()
+	var err := f.get_error()
+	f.close()
+	if err != OK:
+		return false
+	if FileAccess.file_exists(path) and DirAccess.copy_absolute(path, path + ".previous") != OK:
+		return false
+	return DirAccess.rename_absolute(path + ".part", path) == OK
+
+
+static func valid_snapshot(d: Dictionary) -> bool:
+	if not ModRegistry.integer(d, "version", VERSION, VERSION):
+		return false
+	for key in ["civ", "seed", "size", "game_time", "wave", "next_raid", "trees_cut", "zoom"]:
+		if not (d.get(key) is int or d.get(key) is float) or not is_finite(float(d[key])):
+			return false
+	if int(d.size) < 32 or int(d.size) > 512 or not d.get("stock") is Dictionary or not d.get("cam") is Array or d.cam.size() != 2:
+		return false
+	for key in ["buildings", "mobs", "res", "tech", "relics"]:
+		if not d.get(key) is Array:
+			return false
+	for b: Variant in d.buildings:
+		if not b is Dictionary or not Defs.BUILDINGS.has(b.get("k")) or not b.get("o") is Array or b.o.size() != 2 or not b.get("q") is Array or b.q.size() > 5:
+			return false
+		for key in ["work", "hp", "lvl", "qt", "food"]:
+			if not (b.get(key) is int or b.get(key) is float):
+				return false
 	return true
 
 
@@ -44,7 +71,7 @@ static func _v(v: Vector2) -> Array:
 
 static func snapshot(main: Node) -> Dictionary:
 	var map: GameMap = main.map
-	var d := {"version": VERSION, "civ": map.civ, "seed": map.world_seed, "size": map.size, "difficulty": map.difficulty, "game_time": map.game_time,
+	var d := {"version": VERSION, "mod_fingerprint": AppRuntime.mods.fingerprint, "mods": AppRuntime.mods.active, "civ": map.civ, "seed": map.world_seed, "size": map.size, "difficulty": map.difficulty, "game_time": map.game_time,
 		"stock": map.stock, "wave": map.director.wave, "next_raid": map.director.next_raid, "trees_cut": map.trees_cut,
 		"attacks_paused": map.attacks_paused, "cam": _v(main.cam.position), "zoom": main.cam.zoom.x, "opponent": map.opponent}
 	if map.rival:
@@ -64,7 +91,7 @@ static func snapshot(main: Node) -> Dictionary:
 		if not b.alive:
 			continue
 		bs.append({"k": b.kind, "o": [b.origin.x, b.origin.y], "done": b.done, "work": b.work, "hp": b.hp, "lvl": b.level,
-			"q": b.queue, "qt": b.qt, "food": b.food, "rt": b.res_tech, "rtt": b.res_t, "ax": b.gate_axis, "lk": b.locked, "rel": b.relics.size()})
+			"q": b.queue, "qt": b.qt, "food": b.food, "rt": b.res_tech, "rtt": b.res_t, "ax": b.gate_axis, "lk": b.locked, "rel": b.relics.size(), "cost_tracked": b.cost_tracked, "paid_cost": b.paid_cost, "paid_queue": b.paid_queue, "paid_research": b.paid_research})
 	d["buildings"] = bs
 	d["tech"] = map.tech.researched.keys()
 	var ms: Array = []
@@ -138,6 +165,15 @@ static func restore(main: Node, d: Dictionary) -> void:
 		b.hp = float(e.hp)
 		b.food = float(e.food)
 		b.queue.assign(e.q)
+		b.cost_tracked = bool(e.get("cost_tracked", false))
+		b.paid_cost = e.get("paid_cost", {}).duplicate()
+		b.paid_queue = e.get("paid_queue", []).duplicate(true)
+		if not e.has("paid_queue"):
+			for ukind: String in b.queue:
+				b.paid_queue.append(map.unit_info(ukind).cost.duplicate())
+		b.paid_research = e.get("paid_research", {}).duplicate()
+		if not e.has("paid_research") and int(e.get("rt", -1)) >= 0:
+			b.paid_research = Defs.name_cost(map.tech.cost_of(int(e.rt)))
 		b.qt = float(e.qt)
 		if b.done and int(e.get("rt", -1)) >= 0:
 			b.start_research(int(e.rt))

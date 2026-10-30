@@ -93,7 +93,7 @@ const GOOD := Color(0.4, 0.85, 0.4)
 const WARN := Color(1.0, 0.65, 0.2)
 const DANGER := Color(0.95, 0.3, 0.25)
 
-const BUILD_TABS := [
+var BUILD_TABS := [
 	["Economy", ["house", "farm", "lumber_camp", "mining_camp", "mill", "dock", "market", "tc"]],
 	["Military", ["barracks", "archery_range", "stable", "siege_workshop", "monastery", "blacksmith"]],
 	["Defense", ["tower", "wall", "gate", "castle", "university"]],
@@ -101,6 +101,8 @@ const BUILD_TABS := [
 
 
 func build(m: GameMap, c: Controller) -> void:
+	if not AppRuntime.mods.buildings.is_empty():
+		BUILD_TABS.append(["Mods", AppRuntime.mods.buildings.map(func(b: Dictionary) -> String: return b.key)])
 	map = m
 	ctl = c
 	ui_scale = Defs.load_ui_scale()
@@ -632,7 +634,7 @@ func _sig() -> String:
 func _update_costs() -> void:
 	var dim := {}
 	for e: Array in _cost_labels:
-		var lacking: bool = int(map.stock[e[1]]) < int(e[2])
+		var lacking: bool = int(map.stock[e[1]]) < int(e[2]) and not AppRuntime.cheats.enabled(e[1])
 		(e[0] as Label).add_theme_color_override("font_color", Color(1.0, 0.4, 0.35) if lacking else INK)
 		dim[e[3]] = bool(dim.get(e[3], false)) or lacking
 	for btn: Button in dim:
@@ -1301,6 +1303,8 @@ func _back_pressed() -> void:
 
 
 func blocks(p: Vector2) -> bool:
+	if AppRuntime.blocks(p):
+		return true
 	if _open_modal != "":
 		return true
 	for c: Control in [top, bottom, place_bar]:
@@ -1313,7 +1317,7 @@ func blocks(p: Vector2) -> bool:
 func _process(dt: float) -> void:
 	_pulse += dt
 	for r: String in Defs.RES_NAMES:
-		_res_labels[r].text = str(map.stock[r])
+		_res_labels[r].text = "∞" if AppRuntime.cheats.enabled(r) else str(map.stock[r])
 	var capped := map.pop >= map.pop_cap
 	pop_label.text = "%d/%d" % [map.pop, map.pop_cap]
 	pop_label.add_theme_color_override("font_color", (DANGER if int(_pulse * 3.0) % 2 == 0 else INK) if capped else INK)

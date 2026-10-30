@@ -183,6 +183,8 @@ static func lock_reason(tech: TechState, key: String) -> String:
 	if key == "gate":
 		return "" if tech.age() >= 1 else "Needs %s" % Rules.AGE_NAMES[1]
 	var d: Dictionary = BUILDINGS[key]
+	if tech.age() < int(d.get("required_age", 0)):
+		return "Needs %s" % Rules.AGE_NAMES[int(d.required_age)]
 	if not d.has("uid") or tech.enabled.get(int(d.uid), false):
 		return ""
 	if key == "farm":

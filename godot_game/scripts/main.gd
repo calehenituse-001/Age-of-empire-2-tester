@@ -14,8 +14,8 @@ var hud: Hud
 
 
 func _ready() -> void:
-	Chatter.enabled = Defs.load_chatter()
-	Tombstone.enabled = Defs.load_tombs()
+	Chatter.enabled = Defs.load_chatter() and not AppRuntime.reduced_effects()
+	Tombstone.enabled = Defs.load_tombs() and not AppRuntime.reduced_effects()
 	map = GameMap.new()
 	map.difficulty = Defs.load_difficulty()
 	map.civ = int(pending.get("civ", Defs.load_civ())) if not pending.is_empty() else Defs.load_civ()
@@ -58,6 +58,10 @@ func _ready() -> void:
 	cam.lasso_drawing.connect(func() -> void: ctl.toast("Draw a loop round the units"))
 	cam.lasso_changed.connect(hud.lasso.set_points)
 	cam.lasso_ended.connect(ctl.select_in_lasso)
+	var overlay := CheatOverlay.new()
+	add_child(overlay)
+	overlay.setup(self)
+	Assets.release_terrain_cpu_cache()
 
 
 var _auto_t := 120.0

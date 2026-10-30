@@ -1,0 +1,28 @@
+{
+  "buildings": [
+    {
+      "id": 900001,
+      "key": "modern_supply_depot",
+      "name": "Modern Supply Depot",
+      "baseId": 562,
+      "size": 2,
+      "hp": 900,
+      "population": 10,
+      "requiredAge": 0,
+      "seconds": 40,
+      "cost": {
+        "wood": 100,
+        "stone": 50
+      },
+      "dropoff": [
+        "food",
+        "wood",
+        "gold",
+        "stone"
+      ],
+      "sprite": "sprites/supply-depot.png",
+      "hotspotX": 128,
+      "hotspotY": 139
+    }
+  ]
+}

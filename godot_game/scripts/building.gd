@@ -21,6 +21,10 @@ var qt := 0.0
 var food := 0.0
 var farmer: Object = null
 var selected := false
+var cost_tracked := false
+var paid_cost: Dictionary = {}
+var paid_queue: Array = []
+var paid_research: Dictionary = {}
 
 var _cd := 0.0
 var _workers_now := 0
@@ -100,7 +104,7 @@ func add_work(dt: float) -> void:
 	if done:
 		return
 	_workers_now += 1
-	work += dt * pow(float(maxi(_workers_last, 1)), -0.3)
+	work = AppRuntime.cheats.advance("build", work, work_needed, dt * pow(float(maxi(_workers_last, 1)), -0.3), team)
 	hp = minf(max_hp, hp + max_hp * 0.9 * dt / work_needed)
 	if work >= work_needed:
 		_finish(true)
@@ -233,11 +237,11 @@ func refund_cost() -> Dictionary:
 	var add := func(c: Dictionary) -> void:
 		for r: String in c:
 			total[r] = int(total.get(r, 0)) + int(c[r])
-	add.call(def.cost)
+	add.call(paid_cost if cost_tracked else def.cost)
 	if res_tech >= 0:
-		add.call(Defs.name_cost(map.tech.cost_of(res_tech)))
-	for u: String in queue:
-		add.call(map.unit_info(u).cost)
+		add.call(paid_research)
+	for receipt: Dictionary in paid_queue:
+		add.call(receipt)
 	return total
 
 
@@ -470,13 +474,17 @@ func tick(dt: float) -> void:
 	_workers_now = 0
 	if _fire:
 		_fire.advance(dt)
+	if alive and not done and dt > 0.0 and AppRuntime.cheats.enabled("instant_build", team):
+		_finish(true)
 	if not alive or not done:
 		return
 	if not queue.is_empty():
 		var u := map.unit_info(queue[0])
-		qt += dt
+		qt = AppRuntime.cheats.advance("train", qt, float(u.time), dt, team)
 		if qt >= float(u.time):
 			qt = 0.0
+			if not paid_queue.is_empty():
+				paid_queue.pop_front()
 			map.spawn_unit(queue.pop_front(), self)
 	if res_tech >= 0:
 		_tick_research(dt)
@@ -503,8 +511,12 @@ func research_time() -> float:
 
 
 func _tick_research(dt: float) -> void:
-	res_t += dt
 	var need := research_time()
+	var upgrade := false
+	for effect: Array in Rules.effects.get(int(Rules.techs[res_tech].effect), []):
+		if int(effect[0]) == 3:
+			upgrade = true
+	res_t = AppRuntime.cheats.advance("research", res_t, need, dt, team, upgrade)
 	if _prog:
 		_prog.set_frac(res_t / need)
 	if res_t >= need:
@@ -515,6 +527,7 @@ func _tick_research(dt: float) -> void:
 			_prog.queue_free()
 			_prog = null
 		Sfx.play("done")
+		paid_research.clear()
 		map.finish_research(id)
 
 
@@ -582,6 +595,8 @@ func tower_shots() -> int:
 
 ## Fire over a damaged building, bigger the worse it is; none while healthy.
 func _update_fire() -> void:
+	if AppRuntime.reduced_effects():
+		return
 	var ratio := hp / max_hp
 	var want := ""
 	if done and alive and kind != "farm" and ratio < 0.66:

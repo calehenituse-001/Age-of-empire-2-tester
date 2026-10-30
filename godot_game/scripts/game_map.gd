@@ -712,19 +712,15 @@ func find_resource(kind: String, from: Vector2i, radius: int, exclude: ResNode =
 
 
 func add_resource(kind: String, n: int) -> void:
-	stock[kind] += n
+	stock[kind] += AppRuntime.cheats.income(n)
 
 
-func can_afford(cost: Dictionary) -> bool:
-	for k: String in cost:
-		if stock[k] < int(cost[k]):
-			return false
-	return true
+func can_afford(cost: Dictionary, category := "") -> bool:
+	return AppRuntime.cheats.can_afford(stock, cost, 0, category)
 
 
-func pay(cost: Dictionary) -> void:
-	for k: String in cost:
-		stock[k] -= int(cost[k])
+func pay(cost: Dictionary, category := "") -> Dictionary:
+	return AppRuntime.cheats.spend(stock, cost, 0, category)
 
 
 # ------------------------------------------------------------------ buildings
@@ -964,7 +960,7 @@ func _relic_income(dt: float) -> void:
 	var whole := int(_relic_gold)
 	if whole > 0:
 		_relic_gold -= whole
-		stock.gold += whole
+		add_resource("gold", whole)
 
 
 ## A monk converted a unit: it fights for his side from now on. A villager of the rival is replaced by a villager of ours.
@@ -1060,17 +1056,17 @@ func barter(res: String, sell: bool) -> String:
 	if res == "gold" or not stock.has(res):
 		return "Gold is the money"
 	if sell:
-		if int(stock[res]) < 100:
+		if not can_afford({res: 100}):
 			return "You need 100 %s to sell" % res
 		stock.gold += barter_sell_gain(res)
-		stock[res] -= 100
+		pay({res: 100})
 		prices[res] = maxf(20.0, prices[res] - BARTER_STEP)
 		prices.gold = minf(300.0, prices.gold + BARTER_STEP)
 	else:
 		var cost := barter_buy_cost(res)
-		if int(stock.gold) < cost:
+		if not can_afford({"gold": cost}):
 			return "You need %d gold" % cost
-		stock.gold -= cost
+		pay({"gold": cost})
 		stock[res] += 100
 		prices[res] = minf(300.0, prices[res] + BARTER_STEP)
 		prices.gold = maxf(20.0, prices.gold - BARTER_STEP)
@@ -1091,9 +1087,9 @@ func try_research(b: Building, id: int) -> String:
 	if not tech.can_research(id):
 		return Defs.tech_lock_reason(tech, id)
 	var cost := Defs.name_cost(tech.cost_of(id))
-	if not can_afford(cost):
+	if not can_afford(cost, "research"):
 		return "Not enough resources (%s)" % Defs.cost_text(cost)
-	pay(cost)
+	b.paid_research = pay(cost, "research")
 	b.start_research(id)
 	return ""
 
@@ -1227,6 +1223,8 @@ func recalc_pop() -> void:
 		if b.done:
 			cap += b.pop_value()
 	pop_cap = 200 if Defs.CIV_START.get(civ, {}).get("no_houses", false) else mini(cap, 200)
+	if AppRuntime.cheats.enabled("population_override"):
+		pop_cap = int(AppRuntime.cheats.values.population_limit)
 	var used := 0
 	for m in mobs:
 		if m.team == 0:
@@ -1260,7 +1258,7 @@ func try_train(b: Building, ukind: String) -> String:
 		return "Population limit reached: build Houses"
 	if not can_afford(u.cost):
 		return "Not enough resources (%s)" % Defs.cost_text(u.cost)
-	pay(u.cost)
+	b.paid_queue.append(pay(u.cost))
 	b.queue.append(ukind)
 	return ""
 

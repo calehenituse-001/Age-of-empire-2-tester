@@ -14,13 +14,21 @@ static var _root := "?"
 static func root() -> String:
 	if _root == "?":
 		_root = ""
-		var order := [IMPORTED] if OS.get_environment("AOE_DATA") == "imported" else [BUNDLED, IMPORTED]     # (the variable lets tests use the import)
+		var order := [imported_root()] if OS.get_environment("AOE_DATA") == "imported" else [BUNDLED, imported_root()]     # (the variable lets tests use the import)
 		for d in order:
 			if FileAccess.file_exists(d + "manifest.json") and FileAccess.file_exists(d + "data/rules.json") \
 					and (d == BUNDLED or FileAccess.file_exists(d + ".complete")):
 				_root = d
 				break
 	return _root
+
+
+static func imported_root() -> String:
+	return AppRuntime.root.path_join("GameData/imported/") if AppRuntime.root != "" else IMPORTED
+
+
+static func resolve(rel: String) -> String:
+	return String(AppRuntime.mods.textures.get(rel, root() + rel))
 
 
 static func ready() -> bool:
@@ -37,7 +45,7 @@ static func rescan() -> void:
 
 
 static func exists(rel: String) -> bool:
-	return ready() and FileAccess.file_exists(root() + rel)
+	return ready() and FileAccess.file_exists(resolve(rel))
 
 
 static func text(rel: String) -> String:
@@ -51,9 +59,9 @@ static func json(rel: String) -> Variant:
 static func texture(rel: String) -> Texture2D:
 	if not ready():
 		return null
-	if bundled():
+	if bundled() and not AppRuntime.mods.textures.has(rel):
 		return load(BUNDLED + rel)
-	var img := Image.load_from_file(IMPORTED + rel)
+	var img := Image.load_from_file(resolve(rel))
 	return ImageTexture.create_from_image(img) if img else null
 
 
@@ -61,8 +69,8 @@ static func texture(rel: String) -> Texture2D:
 static func audio(rel: String) -> AudioStream:
 	if not exists(rel):
 		return null
-	if bundled():
+	if bundled() and not AppRuntime.mods.textures.has(rel):
 		return load(BUNDLED + rel)
 	if rel.ends_with(".mp3"):
-		return AudioStreamMP3.load_from_file(IMPORTED + rel)
-	return AudioStreamWAV.load_from_file(IMPORTED + rel)
+		return AudioStreamMP3.load_from_file(resolve(rel))
+	return AudioStreamWAV.load_from_file(resolve(rel))
