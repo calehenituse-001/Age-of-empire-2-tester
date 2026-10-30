@@ -31,5 +31,7 @@ Use **SAFE MODE** to launch the vanilla save profile without optional mods or ch
 - [Mod format and supported fields](docs/MOD_FORMAT.md)
 - [Build instructions and storage](docs/LAUNCHER_BUILD.md)
 - [Progress, test scope and remaining work](docs/PROGRESS.md)
+- [Measured APK build report](docs/BUILD_REPORT_2026-10-30.json)
+- [Import rollback and recovery](docs/IMPORT_STABILITY.md)
 
 GPL-3.0-or-later; retain [LICENSE](LICENSE) and [NOTICE](NOTICE.md). Godot is MIT. Game data belongs to its respective owners and must not be committed, downloaded by the launcher or redistributed with the APK.
