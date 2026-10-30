@@ -100,10 +100,16 @@ static func _rmdir(path: String) -> void:
 	var d := DirAccess.open(path)
 	if d == null:
 		return
+	# Dotfiles (.complete and .revision) are essential import metadata.
+	# Without include_hidden, removing a previous import leaves its directory
+	# non-empty and makes rollbacks and replacement imports fail.
+	d.include_hidden = true
 	for f in d.get_files():
 		d.remove(f)
 	for s in d.get_directories():
-		_rmdir(path.path_join(s))
+		if not d.is_link(s):
+			_rmdir(path.path_join(s))
+		# A symlink is removed, never followed outside the staging directory.
 		d.remove(s)
 	DirAccess.remove_absolute(path)
 
