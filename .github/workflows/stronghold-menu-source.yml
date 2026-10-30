@@ -55,7 +55,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Stronghold-Menu-Dex
-          path: stronghold/build/menu-dex/classes.dex
+          path: |
+            stronghold/build/menu-dex/classes.dex
+            stronghold/build/menu-dex/apksigner.jar
           if-no-files-found: error
 
 # Runs only for Stronghold-related pull requests or on manual dispatch. The original proprietary APK is NOT in this repo.
