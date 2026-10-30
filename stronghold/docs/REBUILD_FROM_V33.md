@@ -1,6 +1,6 @@
 # Rebuild the visible MOD button directly from the supplied v3.3 APK
 
-The user's uploaded `Stronghold_Mod_Menu_v3.3_Test.apk` was inspected (SHA256 `f29c2c918f9880f958f720df6844682d4824c3de16b334111abd693b3728902`, 61,220,518 bytes).
+The user's uploaded `Stronghold_Mod_Menu_v3.3_Test.apk` was inspected (SHA256 `f29c2c918f9880f958f720df6844682d4824c3cde16b334111abd693b3728902`, 61,220,518 bytes).
 
 It **already contains** the `:extreme` provider, `classes2.dex` with `StrongholdModOverlay`, JNI bridge, `SHMOD033` native signature, and patched ARM64 instructions. The previous invisible button is not caused by simply omitting the menu DEX from the APK. Visibility still requires on-device validation.
 
