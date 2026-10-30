@@ -35,8 +35,15 @@ func _ready() -> void:
 		return
 	var raw := AppRuntime.root.path_join("GameData/raw")
 	revision = FileAccess.get_file_as_string(raw.path_join(".revision")) if FileAccess.file_exists(raw.path_join(".revision")) else ""
-	var imported := GameData.imported_root()
-	var old_revision := FileAccess.get_file_as_string(imported + ".revision") if FileAccess.file_exists(imported + ".revision") else ""
+	var imported := GameData.imported_root().trim_suffix("/")
+	if ImportActivation.recover_missing(imported):
+		print("[launcher] Recovered prior game data after interrupted activation")
+		GameData.rescan()
+		Rules.reload()
+		Assets.load_all()
+		Sfx.reload_data()
+	var revision_marker := imported.path_join(".revision")
+	var old_revision := FileAccess.get_file_as_string(revision_marker) if FileAccess.file_exists(revision_marker) else ""
 	if GameData.ready() and (GameData.bundled() or (revision != "" and revision == old_revision)):
 		_start_game.call_deferred()
 		return
@@ -71,22 +78,25 @@ func _process(_dt: float) -> void:
 		importer.wait()
 		finished = true
 		var dest := GameData.imported_root().trim_suffix("/")
-		var previous := dest + ".previous"
-		Importer._rmdir(previous)
-		if DirAccess.dir_exists_absolute(dest) and DirAccess.rename_absolute(dest, previous) != OK:
-			_fail("Cannot preserve previous import")
-			return
-		if DirAccess.rename_absolute(Importer.DEST, dest) != OK:
-			if DirAccess.dir_exists_absolute(previous):
-				DirAccess.rename_absolute(previous, dest)
-			_fail("Could not activate import. Previous data preserved.")
+		var promotion_error := ImportActivation.promote(Importer.DEST, dest)
+		if not promotion_error.is_empty():
+			_fail(promotion_error + "\nPrevious data was not discarded.")
 			return
 		GameData.rescan()
 		Rules.reload()
 		Assets.load_all()
 		Sfx.reload_data()
-		if Rules.loaded and AppRuntime.mods.error.is_empty():
-			Importer._rmdir(previous)
+		if not Rules.loaded or Assets.man.is_empty() or not AppRuntime.mods.error.is_empty():
+			var restored := ImportActivation.rollback(dest)
+			GameData.rescan()
+			Rules.reload()
+			Assets.load_all()
+			Sfx.reload_data()
+			_fail("Imported game data failed runtime initialization. " +
+				("Previous import restored." if restored else "Backup kept; recovery needed.") +
+				"\nCheck Logs/godot.log before importing again.")
+			return
+		ImportActivation.commit(dest)
 		_start_game.call_deferred()
 
 func _start_game() -> void:
