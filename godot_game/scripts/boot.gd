@@ -93,9 +93,10 @@ func _process(_dt: float) -> void:
 			Rules.reload()
 			Assets.load_all()
 			Sfx.reload_data()
-			var outcome := ("Previous import restored." if had_previous else
-				"Invalid import discarded; no previous import existed.") if restored else
-				"Recovery failed; the previous import may still be available as .previous."
+			var outcome := "Recovery failed; the previous import may still be available as .previous."
+			if restored:
+				outcome = ("Previous import restored." if had_previous else
+					"Invalid import discarded; no previous import existed.")
 			_fail("Imported game data failed runtime initialization. " + outcome +
 				"\nCheck Logs/godot.log before importing again.")
 			return
