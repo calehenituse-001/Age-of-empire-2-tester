@@ -11,7 +11,7 @@ The requested foundation is implemented in source, using the supplied Godot RTS 
 | Mod framework | ZIP install, manifest validation, dependencies/order/conflicts, new building adapter and save profiles implemented |
 | Modern Era sample | Functional additional Supply Depot registered in real Rules/Defs/TechState; construction, HP, dropoff, population and save snapshot tested with fixtures |
 | Local validation | 62 Godot assertions passed, including real simulation classes, mod loading and save isolation; parser and missing-data boot also passed |
-| Android build / tests | Build, JVM tests, lint and emulator startup checks run by android.yml; consult workflow/artifact reports for this commit |
+| Android build / tests | [CI run 40980091247](https://github.com/calehenituse-001/Age-of-empire-2-tester/actions/runs/40980091247) passed: signed ARM64 APK, JVM tests, lint and Android 14 emulator installation/native+Godot startup. Final follow-up build is recorded by android.yml. |
 | Physical device | Pending Xiaomi 11T with user's compatible HD game files |
 
 Tests use original tiny sample art and synthetic rule fixtures, never copyrighted game data. They demonstrate source-level behavior, not the completeness of the importer, full-game compatibility, rendered gameplay or GPU performance. JVM package-validation tests cover safe install, traversal, executable entries, decompression limits, version/dependency/ID conflicts and malformed sprites. The Android smoke test boots the actual embedded engine to its missing-data screen.

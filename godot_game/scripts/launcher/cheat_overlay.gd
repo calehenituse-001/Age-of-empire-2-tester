@@ -53,7 +53,7 @@ func setup(owner_main: Main) -> void:
 			AppRuntime.cheats.values[key] = on
 			b.text = LABELS[key] + (" · ON" if on else " · OFF")
 			if not AppRuntime.save_cheats():
-				main.hud.toast("Could not save cheat configuration")
+				main.hud.show_toast("Could not save cheat configuration")
 			main.map.recalc_pop())
 		column.add_child(b)
 	for kind in ["resource", "build", "train", "research"]:
@@ -86,7 +86,7 @@ func setup(owner_main: Main) -> void:
 		if SaveGame.write(SaveGame.AUTO, main):
 			get_tree().quit()
 		else:
-			main.hud.toast("Save failed; game remains open"))
+			main.hud.show_toast("Save failed; game remains open"))
 	column.add_child(leave)
 	diagnostics_label = Label.new()
 	diagnostics_label.position = Vector2(195, 110)

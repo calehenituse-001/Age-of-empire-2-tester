@@ -710,6 +710,9 @@ func _modal(id: String, title: String, width := 820.0, title_col := GOLD) -> VBo
 
 
 func _open(id: String) -> void:
+	if id == "debug" and not AppRuntime.cheats.eligible():
+		show_toast("Debug cheats are disabled in this session")
+		return
 	for k: String in _modals:
 		_modals[k].root.visible = k == id
 	_open_modal = id

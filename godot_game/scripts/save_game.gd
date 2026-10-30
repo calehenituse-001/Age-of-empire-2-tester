@@ -146,7 +146,7 @@ static func restore(main: Node, d: Dictionary) -> void:
 		map.stock[r] = int(d.stock.get(r, 0))
 	map.trees_cut = int(d.trees_cut)
 	map.tech.restore(d.get("tech", []))
-	map.attacks_paused = bool(d.attacks_paused)
+	map.attacks_paused = bool(d.attacks_paused) and not AppRuntime.safe_mode
 	map.director.wave = int(d.wave)
 	map.director.next_raid = float(d.next_raid)
 	for e: Array in d.res:
