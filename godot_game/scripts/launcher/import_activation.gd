@@ -4,10 +4,27 @@ extends RefCounted
 ## Directory operations remain in the app-private GameData folder.
 
 static func staged_ready(stage: String) -> bool:
-	return DirAccess.dir_exists_absolute(stage) \
-		and FileAccess.file_exists(stage.path_join(".complete")) \
-		and FileAccess.file_exists(stage.path_join("manifest.json")) \
-		and FileAccess.file_exists(stage.path_join("data/rules.json"))
+	if not DirAccess.dir_exists_absolute(stage) \
+			or not FileAccess.file_exists(stage.path_join(".complete")):
+		return false
+	var mpath := stage.path_join("manifest.json")
+	var rpath := stage.path_join("data/rules.json")
+	if not FileAccess.file_exists(mpath) or not FileAccess.file_exists(rpath):
+		return false
+	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string(mpath))
+	var rules: Variant = JSON.parse_string(FileAccess.get_file_as_string(rpath))
+	if not manifest is Dictionary or not rules is Dictionary:
+		return false
+	for section in ["terrain", "buildings", "resources", "anims"]:
+		if not manifest.get(section) is Dictionary:
+			return false
+	for section in ["units", "techs", "effects"]:
+		if not rules.get(section) is Dictionary:
+			return false
+	if not rules.get("civs") is Array or not rules.get("terrains") is Array:
+		return false
+	var tree: Variant = rules.get("tree")
+	return tree is Dictionary and tree.get("ages") is Array
 
 
 ## After a process crash during promotion, only restore the backup if no live
