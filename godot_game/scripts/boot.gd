@@ -87,13 +87,16 @@ func _process(_dt: float) -> void:
 		Assets.load_all()
 		Sfx.reload_data()
 		if not Rules.loaded or Assets.man.is_empty() or not AppRuntime.mods.error.is_empty():
+			var had_previous := DirAccess.dir_exists_absolute(dest + ".previous")
 			var restored := ImportActivation.rollback(dest)
 			GameData.rescan()
 			Rules.reload()
 			Assets.load_all()
 			Sfx.reload_data()
-			_fail("Imported game data failed runtime initialization. " +
-				("Previous import restored." if restored else "Backup kept; recovery needed.") +
+			var outcome := ("Previous import restored." if had_previous else
+				"Invalid import discarded; no previous import existed.") if restored else
+				"Recovery failed; the previous import may still be available as .previous."
+			_fail("Imported game data failed runtime initialization. " + outcome +
 				"\nCheck Logs/godot.log before importing again.")
 			return
 		ImportActivation.commit(dest)
